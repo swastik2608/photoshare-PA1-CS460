@@ -326,7 +326,15 @@ def makefriend():
 
 	cursor = conn.cursor()
 	cursor.execute("INSERT INTO Friends (user_id, friend_id) VALUES ('{0}', '{1}')").format(user_id, friend_id)
-	return render_template('friends.html', user_emails=user_emails)
+
+	friends_ids = getUsersFriends(user_id)
+
+	friends_emails = []
+	for friend_id in friends_ids:
+		friends_emails = friends_emails + [getUserEmailFromUser_Id(friend_id)]
+	
+
+	return render_template('friends.html', user_emails=user_emails, friends_emails=friends_emails)
 
 @app.route("/friend", methods=['GET'])
 @flask_login.login_required
