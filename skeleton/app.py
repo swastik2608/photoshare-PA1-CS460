@@ -23,7 +23,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'PASSWORD'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'Penelope1595'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -242,11 +242,12 @@ def upload_file():
 		cursor = conn.cursor()
 		cursor.execute('''INSERT INTO Photos (data, user_id, caption, albums_id, album_name) VALUES (%s, %s, %s, %s, %s ) ''' ,(data,user_id, caption, album_id, album_name))
 		conn.commit()
-		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(user_id), albums = getUsersAlbums(user_id),base64=base64)
+		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(user_id), Albums = getUsersAlbums(user_id),base64=base64)
 	#The method is GET so we return a  HTML form to upload the a photo.
 	else:
+		user_id = getUserIdFromEmail(flask_login.current_user.id)
 		print(" Arriving at GET upload method")
-		return render_template('upload.html')
+		return render_template('upload.html', Albums = getUsersAlbums(user_id))
 #end photo uploading code
 
 #show all photos
@@ -318,35 +319,36 @@ def show1album(album_name):
 @app.route("/friend", methods=['POST'])
 @flask_login.login_required
 def makefriend():
-	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	user_id1 = getUserIdFromEmail(flask_login.current_user.id)
 	user_emails = getAllUser_Emails()
-	friend_email = request.form.get('email')
-	
-	friend_id = getUserIdFromEmail (friend_email)
-
+	friend_email = request.form.get('friend_email')
+	print(" this is friends email: ", friend_email)
+	user_id2 = getUserIdFromEmail (friend_email)
+	print(" this is friend's id: ", user_id2)
 	cursor = conn.cursor()
-	cursor.execute("INSERT INTO Friends (user_id, friend_id) VALUES ('{0}', '{1}')").format(user_id, friend_id)
-
-	friends_ids = getUsersFriends(user_id)
+	cursor.execute('''INSERT INTO Friends (user_id1, user_id2) VALUES (%s, %s )''', (user_id1, user_id2))
+	
+	conn.commit()
+	friends_ids = getUsersFriends(user_id1)
 
 	friends_emails = []
 	for friend_id in friends_ids:
 		friends_emails = friends_emails + [getUserEmailFromUser_Id(friend_id)]
 	
 
-	return render_template('friends.html', user_emails=user_emails, friends_emails=friends_emails)
+	return render_template('friend.html', user_emails=user_emails, friends_emails=friends_emails)
 
 @app.route("/friend", methods=['GET'])
 @flask_login.login_required
 def ListFriends():
 	user_id = getUserIdFromEmail(flask_login.current_user.id)
 	friends_ids = getUsersFriends(user_id)
-
+	user_emails = getAllUser_Emails()
 	friends_emails = []
 	for friend_id in friends_ids:
 		friends_emails = friends_emails + [getUserEmailFromUser_Id(friend_id)]
 	
-	return render_template('friends.html', friends_emails=friends_emails)
+	return render_template('friend.html', user_emails=user_emails, friends_emails=friends_emails)
 
 
 #default page

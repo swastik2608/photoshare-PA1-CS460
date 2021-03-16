@@ -12,10 +12,10 @@
 
 <title>Friends Page</title>
 <body>
-{% if users_emails %}
+
  <h1>Here are all users on photoshare: </h1>
  <ul>
-    {% for user in users_emails %}
+    {% for user in user_emails %}
 
         <li>{{ user }} 
         </li>
@@ -35,9 +35,7 @@
         </div>
     
 
-{% endif %}
 
-{% if friends_emails %}
 <h1>These are your friends on photoshare: </h1>
 <ul>
     {% for friend in friends_emails %}
@@ -46,7 +44,7 @@
         </li>
     {% endfor %}
     </ul>
-{% endif %}
+
 
 
 
