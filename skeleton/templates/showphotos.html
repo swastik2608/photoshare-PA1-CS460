@@ -1,0 +1,38 @@
+<!--
+    Show Photos
+    1. ALL or MY photos (slide between two)
+    2. Search box at top for tags
+        1. Tags can be combo (query for all photos containing both tags)
+    3. optional to filter photos by tag or no tag 
+    4. pictures as a grid
+
+    for tags: https://jinja.palletsprojects.com/en/2.11.x/templates/#expressions
+    ['list', 'of', 'objects']
+Everything between two brackets is a list. Lists are useful for storing sequential data to be iterated over. For example, you can easily create a list of links using lists and tuples for (and with) a for loop:
+
+<ul>
+{% for href, caption in [('index.html', 'Index'), ('about.html', 'About'),
+                         ('downloads.html', 'Downloads')] %}
+    <li><a href="{{ href }}">{{ caption }}</a></li>
+{% endfor %}
+</ul>
+
+
+-->
+
+<!-- AllPhotos -> list to process for each show photo -->
+
+<a href='/'>Home</a>
+<h2>Here are all photos</h2>
+    <ul>
+        {%for user in AllPhotos %}
+    {% for photo in user %}
+
+        <li>{{photo[2]}}<br>
+        <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/></li>
+    {% endfor %}
+    {% endfor %}
+    </ul>
+    
+
+    </ul>
