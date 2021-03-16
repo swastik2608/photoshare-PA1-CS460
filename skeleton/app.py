@@ -159,6 +159,14 @@ def getAllUser_IDS():
 	records_list = [x[0] for x in records]
 	return records_list
 
+def getAllUser_Emails():
+	cursor = conn.cursor()
+	cursor.execute("""SELECT email from Users """)
+	records = cursor.fetchall()
+	# all user ids in list form
+	records_list = [x[0] for x in records]
+	return records_list
+
 def getUsersPhotos(user_id):
 	cursor = conn.cursor()
 	cursor.execute("SELECT data, photo_id, caption FROM Photos WHERE user_id = '{0}'".format( user_id))
@@ -166,7 +174,7 @@ def getUsersPhotos(user_id):
 
 def getAlbumsPhotos(album_name):
 	cursor = conn.cursor()
-	cursor.execute(" SELECT data, photo_id, caption FROM Photos WHERE album_name = '{0}'")
+	cursor.execute(" SELECT data, photo_id, caption FROM Photos WHERE album_name = '{0}'".format(album_name))
 	return cursor.fetchall()
 
 def getUsersAlbums(user_id):
@@ -176,6 +184,20 @@ def getUsersAlbums(user_id):
 	records_list = [x[0] for x in records]
 	return records_list
 
+def getUsersFriends(user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id2 FROM Friends WHERE user_id1= '{0}'".format(user_id))
+	records = cursor.fetchall()
+	records_list = [x[0] for x in records]
+	return records_list
+
+def getUserEmailFromUser_Id(user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT email FROM Users WHERE user_id = '{0}'".format(user_id))
+	records = cursor.fetchall()
+	records_list = [x[0] for x in records]
+	return records_list
+	
 def getUserIdFromEmail(email):
 	cursor = conn.cursor()
 	cursor.execute("SELECT user_id  FROM Users WHERE email = '{0}'".format(email))
@@ -293,11 +315,37 @@ def show1album(album_name):
 		photo = getAlbumsPhotos(album_name)
 		return render_template ('show1album.html', album_name=album_name, photos=photo)
 
+@app.route("/friend", methods=['POST'])
+@flask_login.login_required
+def makefriend():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	user_emails = getAllUser_Emails()
+	friend_email = request.form.get('email')
+	
+	friend_id = getUserIdFromEmail (friend_email)
+
+	cursor = conn.cursor()
+	cursor.execute("INSERT INTO Friends (user_id, friend_id) VALUES ('{0}', '{1}')").format(user_id, friend_id)
+	return render_template('friends.html', user_emails=user_emails)
+
+@app.route("/friend", methods=['GET'])
+@flask_login.login_required
+def ListFriends():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	friends_ids = getUsersFriends(user_id)
+
+	friends_emails = []
+	for friend_id in friends_ids:
+		friends_emails = friends_emails + [getUserEmailFromUser_Id(friend_id)]
+	
+	return render_template('friends.html', friends_emails=friends_emails)
+
+
 #default page
 @app.route("/", methods=['GET'])
 def hello():
 	return render_template('hello.html', message='Welecome to Photoshare')
-
+	
 
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run
