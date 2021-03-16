@@ -14,11 +14,12 @@
 <h2>Here are all albums</h2>
     <ul>
     {% for album in albums %}
-
+    <li><a href= "/show1album/{{ album }}" > {{ album }}  </a> <br>
+    </li>
     
 
-        <li><a href= "{{ url_for('show1album', album_name = albums.album_name ) }} " > {{ album }}  </a> <br>
-        </li>
+        <!--<li><a href= "{{ url_for('show1album', album_name = albums.album_name ) }} " > {{ album }}  </a> <br>
+        </li> -->
     {% endfor %}
     </ul>
    

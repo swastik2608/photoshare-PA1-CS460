@@ -314,7 +314,7 @@ def show1album(album_name):
 	if request.method == "GET":
 		print("ablum name: ", album_name)
 		photo = getAlbumsPhotos(album_name)
-		return render_template ('show1album.html', album_name=album_name, photos=photo)
+		return render_template ('show1album.html', album_name=album_name, photos=photo, base64=base64)
 
 @app.route("/friend", methods=['POST'])
 @flask_login.login_required
