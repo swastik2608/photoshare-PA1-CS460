@@ -23,7 +23,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'Penelope1595'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'PASSWORD'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -307,6 +307,7 @@ def album():
 		albums=getUsersAlbums(user_id)
 		for album in albums:
 			print(album)
+		
 		return render_template('album.html', name=flask_login.current_user.id, albums=getUsersAlbums(user_id),base64=base64)
 	#The method is GET so we return a  HTML form to create an album
 	else:
@@ -357,37 +358,39 @@ def sameuser():
 
 @app.route("/displayphoto/<photo_id>", methods=['GET', 'POST'])
 def displayphoto(photo_id):
-	photo_info = getOnePhotoInfo(photo_id)
-	if request.method == "GET":
-		comments = getCommentsOnPhotos(photo_id)
-
+	photos = getOnePhotoInfo(photo_id)
+	print(" PROCESSING FUNCTION ")
+	comments = getCommentsOnPhotos(photo_id)
+	if (flask_login.current_user.is_authenticated):
+		user_email = flask_login.current_user.id
+		user_id = getUserIdFromEmail(user_email)
 	else:
+		user_id = None
+
+	for comment in comments:
+			if comment[0] == None:
+				comment[0] = "anonymous"
+			else:
+				comment[0] = getUserEmailFromUser_Id(comment[0])
+
+	if request.method == 'POST':
 		datetoday = date.today()
 		commentText= request.form.get('comment')
 		print("this is the comment:", commentText)
-		if (flask_login.current_user.is_authenticated):
-			user_email = flask_login.current_user.id
-			user_id = getUserIdFromEmail(user_email)
-		else:
-			user_id = None
+		
 		#if request.form['submit_button'] == 'Like':
 		#	insertLike(user_id, photo_id)
 		# check if user id on photo matches user id for comment if so no execute else 
 		if (user_id == getUseridfromphoto(photo_id)[0]):
-			return render_template('errorsameuser.html', message="You can not comment on your own photos", photo_info = photo_info, base64=base64)
+			return render_template('errorsameuser.html', message="You can not comment on your own photos", photo_info = photos, base64=base64)
+		print("GOT PAST USER ID IF STATEMETN")
 		cursor = conn.cursor()
 		cursor.execute('''INSERT INTO Comments ( user_id, photo_id, text, date) VALUES (%s, %s, %s, %s ) ''' ,(user_id, photo_id, commentText, datetoday))
 		conn.commit()
-		print("NOW STORING THE COMMENT")
-	comments = getCommentsOnPhotos(photo_id) # nested list of [user_id, text]
-	for comment in comments:
-		if comment[0] == None:
-			comment[0] = "anonymous"
-		else:
-			comment[0] = getUserEmailFromUser_Id(comment[0])
-			print("this is user email: ", comment[0])
-	print("this is photo info: ", photo_info)
-	return render_template('displayphoto.html', num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photo_info, base64=base64)
+		print(" FINISHED COMMITING")
+		return render_template('displayphoto.html', num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photos, base64=base64)
+
+	return render_template('displayphoto.html', num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photos, base64=base64)
 
 def getMatchingComment(comment_text):
 	print(" this is comment_text in getMatchingCOmment ", comment_text)

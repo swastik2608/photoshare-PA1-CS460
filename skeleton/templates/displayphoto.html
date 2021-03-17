@@ -10,48 +10,35 @@
 <head>
     <title>Here is the Photo</title>
 </head>
-{% if message %}
-        <h1>{{ message }} </h1>
 
-{% endif %}
-
-
-   
-        {%for photos_info in photo_info %}
         <div class="title">
             <h1>Add A Comment</h1>
         </div>
-        
 
+
+    <ul>
+        {% for photo in photo_info %}
+        
         <div id="content">
-            <form method="post" action="/displayphoto/{{ photos_info [1]}}">
-                <label for="comment">Type Comment Here:</label>
+           
+            <form method="POST" action="/displayphoto/{{ photo[1] }}">
+                <label for="comment">Type Comment Here: {{ photo[1] }} </label>
                 <input type="text" name="comment" /><br />
                 <input type="submit" name="submit_button" value="Create" />
             </form>
         </div>
 
 
-
+        
         <h2>This is the Photo: </h2>  
-       <h3>Caption: {{photos_info[2]}}</h3>
-        <img src='data:image/jpg;base64, {{ base64.b64encode(photos_info[0]).decode("ascii") }}'/>
+       <h3>Caption: {{photo[2]}}</h3>
+        <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/>
         
         
         {% endfor %}
-    
-        <!-- ADD LIKE FUNCTIONALITY 
+    </ul>
 
-        <div class="title">
-            <h1>Add A Like</h1>
-        </div>
        
-
-        <div id="content">
-            <form method="post" action="/displayphoto/{{ photos_info [1]}}"> 
-            <input type="submit" name = "submit_button" value="Like" />
-            </form>
-        </div> -->
 
                
 <h2>Here are current comments</h2>
