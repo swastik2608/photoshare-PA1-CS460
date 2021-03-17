@@ -385,17 +385,17 @@ def displayphoto(photo_id):
 		commentText= request.form.get('comment')
 		print("this is the comment:", commentText)
 		if request.form['submit_button'] == 'Like':
-			insertLike(user_id, photo_id)
+			if (flask_login.current_user.is_authenticated):
+				insertLike(user_id, photo_id)
 		#if request.form['submit_button'] == 'Like':
 		#	insertLike(user_id, photo_id)
 		# check if user id on photo matches user id for comment if so no execute else 
 		if (user_id == getUseridfromphoto(photo_id)[0]):
 			return render_template('errorsameuser.html', message="You can not comment on your own photos", photo_info = photos, base64=base64)
-		print("GOT PAST USER ID IF STATEMETN")
+
 		cursor = conn.cursor()
 		cursor.execute('''INSERT INTO Comments ( user_id, photo_id, text, date) VALUES (%s, %s, %s, %s ) ''' ,(user_id, photo_id, commentText, datetoday))
 		conn.commit()
-		print(" FINISHED COMMITING")
 		return render_template('displayphoto.html', user_like_list = getUserLikeListFor1Photo(photo_id), num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photos, base64=base64)
 
 	return render_template('displayphoto.html', user_like_list = getUserLikeListFor1Photo(photo_id), num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photos, base64=base64)
