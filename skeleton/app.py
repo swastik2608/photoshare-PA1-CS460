@@ -252,6 +252,13 @@ def getLikesCountFor1Photo(photo_id):
 	num_likes = cursor.fetchall()
 	return num_likes[0]
 
+def getUserLikeListFor1Photo(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id FROM Likes WHERE photo_id = '{0}'".format(photo_id))
+	user_ids = cursor.fetchall()
+	user_id_list = [x[0] for x in user_ids]
+	user_email_list = [ getUserEmailFromUser_Id(y) for y in user_id_list]
+	return user_email_list
 
 @app.route('/profile')
 @flask_login.login_required
@@ -389,9 +396,9 @@ def displayphoto(photo_id):
 		cursor.execute('''INSERT INTO Comments ( user_id, photo_id, text, date) VALUES (%s, %s, %s, %s ) ''' ,(user_id, photo_id, commentText, datetoday))
 		conn.commit()
 		print(" FINISHED COMMITING")
-		return render_template('displayphoto.html', num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photos, base64=base64)
+		return render_template('displayphoto.html', user_like_list = getUserLikeListFor1Photo(photo_id), num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photos, base64=base64)
 
-	return render_template('displayphoto.html', num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photos, base64=base64)
+	return render_template('displayphoto.html', user_like_list = getUserLikeListFor1Photo(photo_id), num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photos, base64=base64)
 
 def getMatchingComment(comment_text):
 	print(" this is comment_text in getMatchingCOmment ", comment_text)

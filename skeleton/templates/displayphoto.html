@@ -64,8 +64,15 @@
     {% endfor %}
 
 <h4> The Number of likes is: {{ num_likes }}</h4>
+<h5> These users liked the photo: </h5>
+<ul>
+    {% for user in user_like_list %}
 
-
+        <li>User:  {{ user }} <br>
+        </li>
+        {% endfor %}
+    </ul>
+    
 
  
 
