@@ -12,7 +12,7 @@
 </head>
 {% if message %}
         <h1>{{ message }} </h1>
-        
+
 {% endif %}
     <body>
         
@@ -42,8 +42,21 @@
        <h2>This is the Photo: </h2>  
        <h3>Caption: {{photos_info[2]}}</h3>
         <img src='data:image/jpg;base64, {{ base64.b64encode(photos_info[0]).decode("ascii") }}'/>
-{% endfor %}
+
         <!-- ADD LIKE FUNCTIONALITY -->
+       
+        
+        
+          <a href="{{ url_for('like_action', photo_id=photo.id, action='like') }}">Like</a>
+    
+        {{ pic.likes.count() }} likes
+      {% endfor %}
+
+
+
+
+
+
     </body>
 
     <a href='/'>Home</a>

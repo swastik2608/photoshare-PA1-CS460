@@ -376,8 +376,27 @@ def displayphoto(photo_id):
 		
 	return render_template('displayphoto.html',  comments=comments , photo_info = photo_info, base64=base64)
 
+def getMatchingComment(comment_text):
+	print(" this is comment_text in getMatchingCOmment ", comment_text)
+	print(" this is comment_text in getMatchingCOmment ", comment_text)
+	cursor = conn.cursor()
+	#												HOW TO GET CORRECT EXACT MATCH TEXT?
+	cursor.execute('''SELECT user_id, text FROM Comments WHERE text LIKE '%{0}%' ORDER BY user_id desc'''.format(comment_text))
+	records = cursor.fetchall()
+	print(" this is records: ", records)
+	# all user ids in list form
+	records_list = [ [x[0], x[1]] for x in records]
+	return records_list
 
-
+@app.route ("/searchcomments", methods=['GET', 'POST'])
+def searchcomments():
+	if request.method=='POST':
+		comment_text= request.form.get('comment')
+		matching_comments = getMatchingComment(comment_text)
+		print("these are matching comments: ", matching_comments)
+		return render_template('searchcomments.html', comments=matching_comments)
+	
+	return render_template('searchcomments.html') 
 
 @app.route("/friend", methods=['POST'])
 @flask_login.login_required

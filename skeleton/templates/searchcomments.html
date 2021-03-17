@@ -4,3 +4,26 @@
         1. use user input to query comment text fields
     2. Display comments in descending order (WHAT DOES THIS MEAN? https://www.w3schools.com/python/python_mysql_orderby.asp  
 -->
+
+<div class="title">
+    <h1>Search All Comments</h1>
+</div>
+<div id="content">
+    <form method="post" action="/searchcomments">
+        <label for="comment">Please Write Text to be Searched:</label>
+        <input type="text" name="comment" required='true' /><br />
+        <input type="submit" value="Search" />
+    </form>
+</div>
+
+{% if comments %}
+<h2>These are the comments matching your search: </h2>
+<ul>
+    {% for comment in comments %}
+
+        <li>Comment:  {{ comment[1] }} <br>
+            <body> From User: {{ comment[0] }}</body>
+        </li>
+    {% endfor %}
+    </ul>
+{% endif %}
