@@ -248,7 +248,7 @@ def insertLike(user_id, photo_id):
 
 def getLikesCountFor1Photo(photo_id):
 	cursor = conn.cursor()
-	cursor.execute("SELECT COUNT * FROM Likes WHERE photo_id = '{0}'".format(photo_id))
+	cursor.execute("SELECT COUNT (*) FROM Likes WHERE photo_id = '{0}'".format(photo_id))
 	num_likes = cursor.fetchall()
 	return num_likes[0]
 
