@@ -23,7 +23,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'PASSWORD'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'Penelope1595'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -204,6 +204,7 @@ def getUsersAlbums(user_id):
 	cursor.execute("Select album_name FROM Albums WHERE user_id = '{0}'".format(user_id))
 	records = cursor.fetchall()
 	records_list = [x[0] for x in records]
+	records_list = [x for x in records_list if x != None ]
 	return records_list
 
 def getUsersFriends(user_id):
@@ -239,6 +240,13 @@ def isEmailUnique(email):
 	else:
 		return True
 #end login code
+
+def deleteAlbum(album_name):
+	cursor = conn.cursor()
+	cursor.execute("DELETE FROM Albums WHERE album_name = '{0}'".format(album_name))
+	print(" Deleted Successfully ")
+	return
+
 
 def insertLike(user_id, photo_id):
 	cursor = conn.cursor()
@@ -314,7 +322,8 @@ def album():
 		albums=getUsersAlbums(user_id)
 		for album in albums:
 			print(album)
-		
+		album_delete = request.form.get('album_delete')
+		deleteAlbum(album_delete)
 		return render_template('album.html', name=flask_login.current_user.id, albums=getUsersAlbums(user_id),base64=base64)
 	#The method is GET so we return a  HTML form to create an album
 	else:

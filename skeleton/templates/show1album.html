@@ -15,10 +15,19 @@
             </li>
             {% endfor %}
             </ul>
-
+        {% if owner %}
+    </ul>
+    <div id="content">
+        <h3>Photo to be Deleted </h3>
+        <form method="post" action="/searchcomments">
+            <label for="album_name">Please Write Name of Album to be Deleted:</label>
+            <input type="text" name="album_name" /><br />
+            <input type="submit" value="Delete" />
+        </form>
+    </div>
+    
+    </ul>
+        {% endif %}
 
     {% endfor %}
-    </ul>
     
-
-    </ul>
