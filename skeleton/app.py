@@ -441,17 +441,18 @@ def showallalbums():
 		albums = albums + [  x for x in getUsersAlbums(user_id)  ]
 	return render_template('showalbum.html', albums=albums )
 
-@app.route("/imgsearch", methods=["GET, POST"])
+@app.route ("/imgsearch", methods=['GET', 'POST'])
 def imgsearch():
-	if request.method == 'POST':
+	if request.method=='POST':
 		tag = request.form.get('search_here')
-			
-		return render_template('imgsearch.html')
-	#The method is GET so we return a HTML form to upload the a photo.
-	else:
-		user_id = getUserIdFromEmail(flask_login.current_user.id)
-		print(" Arriving at GET upload method")
-		return render_template('imgsearch.html', Albums = getUsersAlbums(user_id))
+		tagid = getTag_IdFromTag(tag)
+		photoidlist = getPhotosFromTags(tagid)
+		photos = []
+		for i in photoidlist:
+			photos = photos + [x for x in getPhotosFromPhoto_Id(i)]
+		return render_template ('show1tag.html',tag_name = tag, photos=photos, base64=base64)
+	return render_template('imgsearch.html') 
+
 
 @app.route("/showmyalbum", methods=["GET"])
 @flask_login.login_required
