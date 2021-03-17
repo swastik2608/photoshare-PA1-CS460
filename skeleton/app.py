@@ -273,6 +273,27 @@ def getUserLikeListFor1Photo(photo_id):
 	user_email_list = [ getUserEmailFromUser_Id(y) for y in user_id_list]
 	return user_email_list
 
+def getUserFriends(user_id1):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id2 FROM Friends WHERE user_id1 = '{0}'".format(user_id1))
+	friend = cursor.fetchall()
+	friend_list = [x[0] for x in friend]
+	return friend_list
+
+def mutualFriend(current_id, friend_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id2 FROM Friends WHERE user_id1 != '{0}' AND user_id1 = '{1}' ".format(current_id, friend_id))
+	mutual = cursor.fetchall()
+	mutual_list = [x[0] for x in mutual]
+	return mutual_list
+
+def friendReccomendation(current_id):
+	friend_list = getUserFriends(current_id)
+	mutual_friends = []
+	for friend in friend_list:
+		mutual_friends += mutualFriend(current_id, friend)
+	return mutual_friends
+
 @app.route('/profile')
 @flask_login.login_required
 def protected():
@@ -488,7 +509,13 @@ def ListFriends():
 	for friend_id in friends_ids:
 		friends_emails = friends_emails + [getUserEmailFromUser_Id(friend_id)]
 	
-	return render_template('friend.html', user_emails=user_emails, friends_emails=friends_emails)
+	friend_reccomend = friendReccomendation(user_id)
+	reccomendation = []
+	for friend in friend_reccomend:
+		reccomendation += [getUserEmailFromUser_Id(friend)]
+	
+
+	return render_template('friend.html', reccomendation= reccomendation, user_emails=user_emails, friends_emails=friends_emails)
 
 
 

@@ -50,6 +50,16 @@
 
 </body>
 
+{% if reccomendation %}
+<h2>These are reccomendend friends: </h2>
+<ul>
+    {% for person in reccomendation %}
+
+        <li>{{ person }} 
+        </li>
+    {% endfor %}
+    </ul>
+{% endif %}
 
 
 <ul>
