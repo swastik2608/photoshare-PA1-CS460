@@ -172,6 +172,20 @@ def getUsersPhotos(user_id):
 	cursor.execute("SELECT data, photo_id, caption FROM Photos WHERE user_id = '{0}'".format( user_id))
 	return cursor.fetchall() #NOTE list of tuples, [(imgdata, pid), ...]
 
+def getCommentsOnPhotos(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id, text FROM Comments WHERE photo_id = '{0}'".format(photo_id))
+	records = cursor.fetchall()
+	# all user ids in list form
+	records_list = [ [x[0], x[1]] for x in records]
+	return records_list
+
+def getOnePhotoInfo(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT data, photo_id, caption FROM Photos WHERE photo_id = '{0}'".format(photo_id))
+	return cursor.fetchall()
+
+
 def getAlbumsPhotos(album_name):
 	cursor = conn.cursor()
 	cursor.execute(" SELECT data, photo_id, caption FROM Photos WHERE album_name = '{0}'".format(album_name))
@@ -315,6 +329,36 @@ def show1album(album_name):
 		print("ablum name: ", album_name)
 		photo = getAlbumsPhotos(album_name)
 		return render_template ('show1album.html', album_name=album_name, photos=photo, base64=base64)
+
+
+
+@app.route("/displayphoto/<photo_id>", methods=['GET', 'POST'])
+def displayphoto(photo_id):
+	if request.method == "GET":
+		comments = getCommentsOnPhotos(photo_id)
+
+	else:
+		commentText= request.form.get('comment')
+		if (flask_login.current_user.is_authenticated):
+			user_id = flask_login.current_user.id
+		else:
+			user_id = None
+		datetoday = date.today()
+		cursor = conn.cursor()
+		cursor.execute('''INSERT INTO Comments ( user_id, photo_id, text, date) VALUES (%s, %s, %s, %s ) ''' ,(user_id, photo_id, commentText, datetoday))
+		conn.commit()
+		comments = getCommentsOnPhotos(photo_id) # nested list of [user_id, text]
+		for comment in comments:
+			if comment[0] == None:
+				comment[0] == "anonymous"
+			else:
+				comment[0] = getUserEmailFromUser_Id(comment[0])
+		
+	photo_info = getOnePhotoInfo(photo_id)
+	return render_template('displayphoto.html',  comments=comments , photo_info = photo_info, base64=base64)
+
+
+
 
 @app.route("/friend", methods=['POST'])
 @flask_login.login_required

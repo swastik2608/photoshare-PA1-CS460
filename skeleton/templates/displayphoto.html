@@ -6,3 +6,37 @@
     4. add comment text box (get user_id, if anonymous then leave NULL)
     5. Show comments list (BUTTON) (with comment show username, if user = anonymous then display “anonymous”)
 -->
+
+<head>
+    <title>Here is the Photo</title>
+</head>
+    <body>
+        <div class="title">
+            <h1>Add A Comment</h1>
+        </div>
+        <div id="content">
+            <form method="post" action="/album">
+                <label for="comment">Type Comment Here:</label>
+                <input type="text" name="comment" /><br />
+                <input type="submit" value="Create" />
+            </form>
+        </div>
+               
+<h2>Here are current comments</h2>
+    <ul>
+    {% for comment in commentss %}
+
+        <li>{{ comment[1] }} 
+            <body> User: {{ comment[0] }}</body>
+        </li>
+    {% endfor %}
+    </ul>
+
+       <h2>This is the Photo: </h2>  
+       <h3>Caption: {{photo[2]}}</h3>
+        <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/>
+
+        <!-- ADD LIKE FUNCTIONALITY -->
+    </body>
+
+    <a href='/'>Home</a>
