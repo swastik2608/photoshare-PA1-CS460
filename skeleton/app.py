@@ -377,7 +377,8 @@ def displayphoto(photo_id):
 		datetoday = date.today()
 		commentText= request.form.get('comment')
 		print("this is the comment:", commentText)
-		
+		if request.form['submit_button'] == 'Like':
+			insertLike(user_id, photo_id)
 		#if request.form['submit_button'] == 'Like':
 		#	insertLike(user_id, photo_id)
 		# check if user id on photo matches user id for comment if so no execute else 

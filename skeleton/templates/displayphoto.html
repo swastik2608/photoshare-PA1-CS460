@@ -34,7 +34,18 @@
        <h3>Caption: {{photo[2]}}</h3>
         <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/>
         
-        
+        <!-- ADD LIKE FUNCTIONALITY -->
+
+        <div class="title">
+            <h1>Add A Like</h1>
+        </div>
+       
+
+        <div id="content">
+            <form method="post" action="/displayphoto/{{ photo[1]}}"> 
+            <input type="submit" name = "submit_button" value="Like" />
+            </form>
+        </div> 
         {% endfor %}
     </ul>
 
