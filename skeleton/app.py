@@ -185,6 +185,23 @@ def getUsersPhotos(user_id):
 def getUsersPhoto_Ids(user_id):
 	cursor = conn.cursor()
 	cursor.execute("SELECT photo_id FROM Photos WHERE user_id = '{0}'".format( user_id))
+	records = cursor.fetchall()
+	print(records)
+	records_list = [x[0] for x in records]
+	print(records_list)
+	return records_list
+
+def getCommentsOnPhotos(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id, text FROM Comments WHERE photo_id = '{0}'".format(photo_id))
+	records = cursor.fetchall()
+	# all user ids in list form
+	records_list = [ [x[0], x[1]] for x in records]
+	return records_list
+
+def getOnePhotoInfo(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT data, photo_id, caption FROM Photos WHERE photo_id = '{0}'".format(photo_id))
 	return cursor.fetchall()
 
 def getAlbumsPhotos(album_name):
@@ -238,6 +255,23 @@ def getPhotosFromTags(tag_id):
 	records_list = [x[0] for x in records]
 	return records_list
 
+def getNumberofPhotosFromTags(tag_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT photo_id FROM Tagged WHERE tag_id = '{0}'".format(tag_id))
+	records = cursor.fetchall()
+	records_list = [x[0] for x in records]
+	return len(records_list)
+
+def getPhotosFromTaglist(tag_idlist):
+	photos = []
+	for tag in tag_idlist:
+		photos = photos + [x for x in getPhotosFromTags(tag)]
+	res = [] 
+	print(photos)
+	[res.append(x) for x in photos if x not in res]
+	print(res)
+	return res
+
 def getTag_IdFromPhoto_id(photo_id):
 	cursor = conn.cursor()
 	cursor.execute("SELECT tag_id FROM Tagged WHERE photo_id = '{0}'".format(photo_id))
@@ -284,6 +318,26 @@ def isEmailUnique(email):
 	else:
 		return True
 #end login code
+
+def insertLike(user_id, photo_id):
+	cursor = conn.cursor()
+	cursor.execute("INSERT INTO Likes (photo_id, user_id) VALUES (%s, %s)", (photo_id, user_id))
+	conn.commit()
+	return
+
+def getLikesCountFor1Photo(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT COUNT(*) FROM Likes WHERE photo_id = '{0}'".format(photo_id))
+	num_likes = cursor.fetchall()
+	return num_likes[0]
+
+def getUserLikeListFor1Photo(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id FROM Likes WHERE photo_id = '{0}'".format(photo_id))
+	user_ids = cursor.fetchall()
+	user_id_list = [x[0] for x in user_ids]
+	user_email_list = [ getUserEmailFromUser_Id(y) for y in user_id_list]
+	return user_email_list
 
 def isTagUnique(name):
 	#use this to check if a tag has already been registered
@@ -406,11 +460,12 @@ def searchtags():
 @flask_login.login_required
 def searchmytags():
 	user_id = getUserIdFromEmail(flask_login.current_user.id)
-	photos = [getUsersPhoto_Ids(user_id)]
+	photos = getUsersPhoto_Ids(user_id)
 	tags = []
 	for photo in photos:
 		tags = tags + [getTag_IdFromPhoto_id(photo) ]
-	return render_template('searchmytags.html', tags=tags )
+	print(tags[0])
+	return render_template('searchmytags.html', tags=tags[0] )
 
 @app.route("/searchtags", methods=["POST"])
 def selecttag():
@@ -420,6 +475,18 @@ def selecttag():
 		tags = tags + [getTagFromTag_Id(tag_id)]
 
 	return render_template('showalbum.html', tags=tags )
+
+@app.route("/searchmytags", methods=["POST"])
+@flask_login.login_required
+def selectmytags():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	photos = getUsersPhoto_Ids(user_id)
+	print(photos)
+	tags = []
+	for photo in photos:
+		tags = tags + [getTag_IdFromPhoto_id(photo) ]
+	print(tags)
+	return render_template('searchmytags.html', tags=tags )
 
 @app.route("/show1tag/<tag_name>", methods=['GET', 'POST'])
 def show1tag(tag_name):
@@ -445,8 +512,11 @@ def showallalbums():
 def imgsearch():
 	if request.method=='POST':
 		tag = request.form.get('search_here')
-		tagid = getTag_IdFromTag(tag)
-		photoidlist = getPhotosFromTags(tagid)
+		tagl = tag.split(",")
+		tagid = []
+		for i in tagl:
+			tagid.append(getTag_IdFromTag(i))
+		photoidlist = getPhotosFromTaglist(tagid)
 		photos = []
 		for i in photoidlist:
 			photos = photos + [x for x in getPhotosFromPhoto_Id(i)]
@@ -492,6 +562,99 @@ def show1album(album_name):
 		photo = getAlbumsPhotos(album_name)
 		#print(photo)
 		return render_template ('show1album.html', album_name=album_name, photos=photo, base64=base64)
+
+def merge(list1, list2): 
+      
+    merged_list = tuple(zip(list1, list2))  
+    return merged_list 
+
+@app.route("/top10", methods=["GET"])
+def gettop10():
+	taglist = getAllTags()
+
+	count = []
+	for tag in taglist:
+		count = count + [getNumberofPhotosFromTags(tag)] 
+	tags = []
+	for tag_id in taglist:
+		tags = tags + [getTagFromTag_Id(tag_id)]
+
+	merged = merge(count,tags)
+
+	sorted_data = sorted(merged)
+	
+	tags1 = []
+	for i in sorted_data:
+   		tags1.append(getTagFromTag_Id(i[1]))
+
+	tags1.reverse()
+		
+	print(tags)
+	
+	return render_template('top10.html', tags = tags1)
+
+@app.route('/errorsameuser')
+def sameuser():
+		return render_template('errorsameuser.html')	
+
+@app.route("/displayphoto/<photo_id>", methods=['GET', 'POST'])
+def displayphoto(photo_id):
+	photos = getOnePhotoInfo(photo_id)
+	print(" PROCESSING FUNCTION ")
+	comments = getCommentsOnPhotos(photo_id)
+	if (flask_login.current_user.is_authenticated):
+		user_email = flask_login.current_user.id
+		user_id = getUserIdFromEmail(user_email)
+	else:
+		user_id = None
+
+	for comment in comments:
+			if comment[0] == None:
+				comment[0] = "anonymous"
+			else:
+				comment[0] = getUserEmailFromUser_Id(comment[0])
+
+	if request.method == 'POST':
+		datetoday = date.today()
+		commentText= request.form.get('comment')
+		print("this is the comment:", commentText)
+		if request.form['submit_button'] == 'Like':
+			if (flask_login.current_user.is_authenticated):
+				insertLike(user_id, photo_id)
+		#if request.form['submit_button'] == 'Like':
+		#	insertLike(user_id, photo_id)
+		# check if user id on photo matches user id for comment if so no execute else 
+		if (user_id == getUserIdFromPhotoId(photo_id)[0]):
+			return render_template('errorsameuser.html', message="You can not comment on your own photos", photo_info = photos, base64=base64)
+
+		cursor = conn.cursor()
+		cursor.execute('''INSERT INTO Comments ( user_id, photo_id, text, date) VALUES (%s, %s, %s, %s ) ''' ,(user_id, photo_id, commentText, datetoday))
+		conn.commit()
+		return render_template('displayphoto.html', user_like_list = getUserLikeListFor1Photo(photo_id), num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photos, base64=base64)
+
+	return render_template('displayphoto.html', user_like_list = getUserLikeListFor1Photo(photo_id), num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photos, base64=base64)
+
+def getMatchingComment(comment_text):
+	print(" this is comment_text in getMatchingCOmment ", comment_text)
+	print(" this is comment_text in getMatchingCOmment ", comment_text)
+	cursor = conn.cursor()
+	#												HOW TO GET CORRECT EXACT MATCH TEXT?
+	cursor.execute('''SELECT user_id, text FROM Comments WHERE text LIKE '%{0}%' ORDER BY user_id desc'''.format(comment_text))
+	records = cursor.fetchall()
+	print(" this is records: ", records)
+	# all user ids in list form
+	records_list = [ [x[0], x[1]] for x in records]
+	return records_list
+
+@app.route ("/searchcomments", methods=['GET', 'POST'])
+def searchcomments():
+	if request.method=='POST':
+		comment_text= request.form.get('comment')
+		matching_comments = getMatchingComment(comment_text)
+		print("these are matching comments: ", matching_comments)
+		return render_template('searchcomments.html', comments=matching_comments)
+	
+	return render_template('searchcomments.html') 
 
 
 @app.route("/friend", methods=['POST'])
