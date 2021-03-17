@@ -44,8 +44,26 @@
         <img src='data:image/jpg;base64, {{ base64.b64encode(photos_info[0]).decode("ascii") }}'/>
 
         <!-- ADD LIKE FUNCTIONALITY -->
-       
-        
+
+        <div class="title">
+            <h1>Add A Like</h1>
+        </div>
+        {%for photos_info in photo_info %}
+
+        <div id="content">
+            <form method="post" action="/displayphoto/{{ photos_info [1]}}">
+            <input type="submit" value="Like" />
+            </form>
+        </div>
+               
+{% endfor %}
+
+
+
+
+
+
+
         
           <a href="{{ url_for('like_action', photo_id=photo.id, action='like') }}">Like</a>
     
@@ -54,6 +72,7 @@
 
 
 
+<h4> The Number of likes is: {{ num_likes }}</h4>
 
 
 

@@ -151,6 +151,7 @@ def register_user():
 def register_error():
 		return render_template('registererror.html', supress='False')	
 
+
 def getAllUser_IDS():
 	cursor = conn.cursor()
 	cursor.execute("""SELECT user_id from Users """)
@@ -238,6 +239,19 @@ def isEmailUnique(email):
 	else:
 		return True
 #end login code
+
+def insertLike(user_id, photo_id):
+	cursor = conn.cursor()
+	cursor.execute("INSERT INTO Likes (photo_id, user_id) VALUES (%s, %s)", (photo_id, user_id))
+	conn.commit()
+	return
+
+def getLikesCountFor1Photo(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT COUNT * FROM Likes WHERE photo_id = '{0}'".format(photo_id))
+	num_likes = cursor.fetchall()
+	return num_likes[0]
+
 
 @app.route('/profile')
 @flask_login.login_required
@@ -357,6 +371,9 @@ def displayphoto(photo_id):
 			user_id = None
 		
 		datetoday = date.today()
+		LikeButton = request.form.get('Like')
+		if LikeButton:
+			insertLike(user_id, photo_id)
 		
 		# check if user id on photo matches user id for comment if so no execute else 
 		print(" this is user_id: ", user_id)
@@ -373,8 +390,10 @@ def displayphoto(photo_id):
 		else:
 			comment[0] = getUserEmailFromUser_Id(comment[0])
 			print("this is user email: ", comment[0])
-		
-	return render_template('displayphoto.html',  comments=comments , photo_info = photo_info, base64=base64)
+	
+
+
+	return render_template('displayphoto.html', num_likes= getLikesCountFor1Photo(photo_id), comments=comments , photo_info = photo_info, base64=base64)
 
 def getMatchingComment(comment_text):
 	print(" this is comment_text in getMatchingCOmment ", comment_text)
@@ -431,6 +450,8 @@ def ListFriends():
 		friends_emails = friends_emails + [getUserEmailFromUser_Id(friend_id)]
 	
 	return render_template('friend.html', user_emails=user_emails, friends_emails=friends_emails)
+
+
 
 
 #default page
