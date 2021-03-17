@@ -23,7 +23,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'Penelope1595'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'PASSWORD'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -247,6 +247,11 @@ def deleteAlbum(album_name):
 	print(" Deleted Successfully ")
 	return
 
+def deletePhoto(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("DELETE FROM Photos WHERE photo_id = '{0}'".format(photo_id))
+	print(" Deleted Successfully ")
+	return
 
 def insertLike(user_id, photo_id):
 	cursor = conn.cursor()
@@ -361,12 +366,32 @@ def selectalbum():
 
 	return render_template('showalbum.html', albums=albums )
 
-@app.route("/show1album/<album_name>", methods=['GET', 'POST'])
+@app.route("/show1album/<album_name>", methods=['GET'])
 def show1album(album_name):
-	if request.method == "GET":
-		print("ablum name: ", album_name)
-		photo = getAlbumsPhotos(album_name)
-		return render_template ('show1album.html', album_name=album_name, photos=photo, base64=base64)
+	print("ablum name: ", album_name)
+	photo = getAlbumsPhotos(album_name)
+	return render_template ('show1album.html', album_name=album_name, photos=photo, base64=base64)
+
+def isOwner(photo_id, user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id FROM Photos WHERE photo_id = '{0}' AND user_id = '{1}'".format(photo_id, user_id))
+	user_list = cursor.fetchall()
+	user_list_1 = [x[0] for x in user_list]
+	if (len(user_list_1) > 0):
+		return (user_list_1[0] == user_id)
+	return False
+
+@app.route("/show1album/<album_name>", methods=["POST"])
+@flask_login.login_required
+def deletePhotoFunction(album_name):
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	photo_delete = request.form.get('photo_delete')
+	if (isOwner(photo_delete, user_id)):
+		deletePhoto(photo_delete)
+	else:
+		return render_template('error_not_yours.html')
+	photo = getAlbumsPhotos(album_name)
+	return render_template ('show1album.html',  album_name=album_name, photos=photo, base64=base64)
 
 @app.route('/errorsameuser')
 def sameuser():
