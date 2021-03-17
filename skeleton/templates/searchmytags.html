@@ -1,0 +1,9 @@
+<h2>Here are all your tags</h2> <a href='/searchtags'>View all tags</a>
+    <ul>
+    {% for tag in tags %}
+    <li><a href= "/show1tag/{{ tag }}" > {{ tag }}  </a> <br>
+    </li>
+    
+
+    {% endfor %}
+    </ul>

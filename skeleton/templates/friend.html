@@ -5,5 +5,53 @@
     2. list current friends (button-> list)
     3. search all users (search box)
     4. show recommended friends (find based on mutual friends)
-
 -->
+
+<!doctype html>
+
+<title>Friends Page</title>
+<body>
+
+ <h1>Here are all users on photoshare: </h1>
+ <ul>
+    {% for user in user_emails %}
+
+        <li>{{ user }} 
+        </li>
+    {% endfor %}
+    </ul>
+
+    
+        <div class="title">
+            <h1>Add a Friend for Photoshare</h1>
+        </div>
+        <div id="content">
+            <form method="post" action="/friend">
+                <label for="friend_email">Please Write New Friend's Email:</label>
+                <input type="text" name="friend_email" required='true' /><br />
+                <input type="submit" value="Add" />
+            </form>
+        </div>
+    
+
+
+<h1>These are your friends on photoshare: </h1>
+<ul>
+    {% for friend in friends_emails %}
+
+        <li>{{ friend }} 
+        </li>
+    {% endfor %}
+    </ul>
+
+
+
+
+</body>
+
+
+
+<ul>
+<li><a href='/logout'>Logout</a></li>
+<li><a href='/'>Home</a></li>
+</ul>

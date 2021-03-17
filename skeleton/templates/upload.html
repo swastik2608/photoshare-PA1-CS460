@@ -11,19 +11,17 @@
                 <input type="file" name="photo" required='true' /><br />
                 <label for="caption">Please caption:</label>
                 <input type="text" name="caption" required='true' /><br />
+                <label for="tags">Tags: Separate with commas</label>
+                <input type="text" name="tags" /><br />
                 <h2>Here are your albums</h2>
                     <ul>
                     {% for album in Albums %}
                 
-                        <li>{{album[1]}}<br> </li>
+                        <li>{{ album }}<br> </li>
                     {% endfor %}
                     </ul>
                     <label for="album_name">Select Album: </label>
                     <input type="text" name="album_name" required='true' /><br />
-                
-                                
-
-                <!-- NEED TO FIGURE OUT A WAY TO GET THE ALBULM ID from user-->>
                 
                 <input type="submit" value="Upload" />
             </form>

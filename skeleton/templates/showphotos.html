@@ -22,7 +22,7 @@ Everything between two brackets is a list. Lists are useful for storing sequenti
 
 <!-- AllPhotos -> list to process for each show photo -->
 
-<a href='/'>Home</a>
+<a href='/'>Home</a><br> <a href='/showmyphotos'>View only my photos</a>
 <h2>Here are all photos</h2>
     <ul>
         {%for user in AllPhotos %}
@@ -30,6 +30,8 @@ Everything between two brackets is a list. Lists are useful for storing sequenti
 
         <li>{{photo[2]}}<br>
         <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/></li>
+        <button type="button" onclick="alert('Liked')">Like</button>
+        
     {% endfor %}
     {% endfor %}
     </ul>

@@ -1,0 +1,12 @@
+<!-- SHOW MY PHOTOS associated with one tag -->
+
+<a href='/'>Home</a>
+<h2>Here are all photos for tag {{ tag_name }}</h2>
+<ul>
+    {% for photo in photos %}
+    <li>{{photo[2]}}<br>
+        <a href="/displayphoto/{{ photo }}">
+            <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/></li>
+        </a>
+    {% endfor %}
+</ul>

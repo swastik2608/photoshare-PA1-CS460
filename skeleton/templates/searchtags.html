@@ -1,6 +1,9 @@
-<!--
-    Search Tags
-    1. Search box for tags (like the one from Show Photos)
-    2. list most frequently used tags (TAGS = HYPERLINKS https://piazza.com/class/kkcsskmzkqs48c?cid=304 )
-    3. ‘you-may-also-like’ functionality (see handout for more details)
--->
+<h2>Here are all tags</h2> <a href='/searchmytags'>View only my tags</a>
+    <ul>
+    {% for tag in tags %}
+    <li><a href= "/show1tag/{{ tag }}" > {{ tag }}  </a> <br>
+    </li>
+    
+
+    {% endfor %}
+    </ul>

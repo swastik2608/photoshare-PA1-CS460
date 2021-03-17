@@ -1,0 +1,24 @@
+<!--
+    Show albums
+    1. list all albums (user selects album to edit)
+    2. if user_id matches album_owner_id then
+        1. upload photo
+            1. assign to album id
+            2. data
+            3. caption
+            4. tag (can ONLY be assigned to a photo here)
+        2. display photos 
+            1. (with option to delete photo)
+    3. Delete Album
+-->
+<a href='/'>Home</a><br><h2>Here are all albums</h2> <a href='/showalbum'>View all albums</a>
+    <ul>
+    {% for album in albums %}
+    <li><a href= "/show1album/{{ album }}" > {{ album }}  </a> <br>
+    </li>
+    
+
+        <!--<li><a href= "{{ url_for('show1album', album_name = albums.album_name ) }} " > {{ album }}  </a> <br>
+        </li> -->
+    {% endfor %}
+    </ul>

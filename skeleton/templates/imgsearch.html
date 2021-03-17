@@ -1,0 +1,17 @@
+<!-- author ben lawson balawson@bu.edu -->
+<head>
+    <title>Search for image</title>
+</head>
+    <body>
+        <div class="title">
+            <h1>Search for photo</h1>
+        </div>
+        <div id="content">
+            <form method="post" action="{{ url_for('register_user') }}">
+                <label for="search_here">Search Here:*</label>
+                <input type="text" id = "search_here" name="search_here" /><br />
+                <input type="submit" />
+            </form>
+         </div>
+    </body>
+<a href='/'>Home</a>
