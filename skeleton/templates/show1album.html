@@ -6,7 +6,17 @@
     {% for photo in photos %}
 
         <li>{{photo[2]}}<br>
+        <a href= "/displayphoto/{{ photo[1] }}" > {{ photo[1] }}  </a>
         <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/></li>
+
+        <ul>
+            {% for album in albums %}
+            <li><a href= "/show1album/{{ album }}" > {{ album }}  </a> <br>
+            </li>
+            {% endfor %}
+            </ul>
+
+
     {% endfor %}
     </ul>
     
