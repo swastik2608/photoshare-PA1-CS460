@@ -23,7 +23,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'PASSWORD'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'snicket2608'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -141,7 +141,7 @@ def register_user():
 		user = User()
 		user.id = email
 		flask_login.login_user(user)
-		return render_template('hello.html', name=email, message='Account Created!')
+		return render_template('profile.html', name=email, message='Account Created!')
 	else:
 		print("WRONG EMAIL couldn't find all tokens")
 		#render_template('register.html', supress='False')
@@ -159,14 +159,37 @@ def getAllUser_IDS():
 	records_list = [x[0] for x in records]
 	return records_list
 
+def getAllTags():
+	cursor = conn.cursor()
+	cursor.execute("""SELECT tag_id from Tags """)
+	records = cursor.fetchall()
+	# all tag ids in list form
+	records_list = [x[0] for x in records]
+	return records_list
+
+
+def getAllUser_Emails():
+	cursor = conn.cursor()
+	cursor.execute("""SELECT email from Users """)
+	records = cursor.fetchall()
+	# all user ids in list form
+	records_list = [x[0] for x in records]
+	return records_list
+	
+
 def getUsersPhotos(user_id):
 	cursor = conn.cursor()
 	cursor.execute("SELECT data, photo_id, caption FROM Photos WHERE user_id = '{0}'".format( user_id))
 	return cursor.fetchall() #NOTE list of tuples, [(imgdata, pid), ...]
 
+def getUsersPhoto_Ids(user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT photo_id FROM Photos WHERE user_id = '{0}'".format( user_id))
+	return cursor.fetchall()
+
 def getAlbumsPhotos(album_name):
 	cursor = conn.cursor()
-	cursor.execute(" SELECT data, photo_id, caption FROM Photos WHERE album_name = '{0}'")
+	cursor.execute(" SELECT data, photo_id, caption FROM Photos WHERE album_name = '{0}'".format(album_name))
 	return cursor.fetchall()
 
 def getUsersAlbums(user_id):
@@ -176,9 +199,75 @@ def getUsersAlbums(user_id):
 	records_list = [x[0] for x in records]
 	return records_list
 
+def getUsersFriends(user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id2 FROM Friends WHERE user_id1= '{0}'".format(user_id))
+	records = cursor.fetchall()
+	records_list = [x[0] for x in records]
+	return records_list
+
+def getUserEmailFromUser_Id(user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT email FROM Users WHERE user_id = '{0}'".format(user_id))
+	records = cursor.fetchall()
+	records_list = [x[0] for x in records]
+	return records_list
+
+def getUserIdFromPhotoId(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id FROM Photos WHERE photo_id = '{0}'".format(photo_id))
+	records = cursor.fetchall()
+	records_list = [x[0] for x in records]
+	return records_list
+
+def getLastNameFromUser_Id(user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT last_name FROM Users WHERE user_id = '{0}'".format(user_id))
+	return cursor.fetchone()[0]
+
+def getFirstNameFromUser_Id(user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT first_name FROM Users WHERE user_id = '{0}'".format(user_id))
+	return cursor.fetchone()[0]
+
+def getPhotosFromTags(tag_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT photo_id FROM Tagged WHERE tag_id = '{0}'".format(tag_id))
+	records = cursor.fetchall()
+	print(records)
+	records_list = [x[0] for x in records]
+	return records_list
+
+def getTag_IdFromPhoto_id(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT tag_id FROM Tagged WHERE photo_id = '{0}'".format(photo_id))
+	records = cursor.fetchall()
+	records_list = [x[0] for x in records]
+	return records_list
+
+def getPhotosFromPhoto_Id(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT data, photo_id, caption FROM Photos WHERE photo_id = '{0}'".format(photo_id))
+	return cursor.fetchall()
+
+def getTagFromTag_Id(tag_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT name FROM Tags WHERE tag_id = '{0}'".format(tag_id))
+	return cursor.fetchone()[0]
+
+def getTag_IdFromTag(name):
+	cursor = conn.cursor()
+	cursor.execute("SELECT tag_id FROM Tags WHERE name = '{0}'".format(name))
+	return cursor.fetchone()[0]
+	
 def getUserIdFromEmail(email):
 	cursor = conn.cursor()
 	cursor.execute("SELECT user_id  FROM Users WHERE email = '{0}'".format(email))
+	return cursor.fetchone()[0]
+
+def getPhotoIdFromCaption(caption):
+	cursor = conn.cursor()
+	cursor.execute("SELECT photo_id  FROM Photos WHERE caption = '{0}'".format(caption))
 	return cursor.fetchone()[0]
 
 def getAlbumIDFromUserId(user_id, album_name):
@@ -196,10 +285,20 @@ def isEmailUnique(email):
 		return True
 #end login code
 
+def isTagUnique(name):
+	#use this to check if a tag has already been registered
+	cursor = conn.cursor()
+	if cursor.execute("SELECT name FROM Tags WHERE name = '{0}'".format(name)):
+		#this means there are greater than zero entries with that tag
+		return False
+	else:
+		return True	
+#end login code
+
 @app.route('/profile')
 @flask_login.login_required
 def protected():
-	return render_template('hello.html', name=flask_login.current_user.id, message="Here's your profile")
+	return render_template('profile.html', name=flask_login.current_user.id, message="Here's your profile")
 
 #begin photo uploading code
 # photos uploaded using base64 encoding so they can be directly embeded in HTML
@@ -216,15 +315,30 @@ def upload_file():
 		caption = request.form.get('caption')
 		data =imgfile.read()
 		album_name= request.form.get('album_name')
+		tags = request.form.get('tags')
+		tagarr = tags.split(",")
 		album_id = getAlbumIDFromUserId (user_id, album_name)
 		cursor = conn.cursor()
 		cursor.execute('''INSERT INTO Photos (data, user_id, caption, albums_id, album_name) VALUES (%s, %s, %s, %s, %s ) ''' ,(data,user_id, caption, album_id, album_name))
 		conn.commit()
-		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(user_id), albums = getUsersAlbums(user_id),base64=base64)
+		for i in tagarr:
+			if isTagUnique(i):
+				cursor = conn.cursor()
+				cursor.execute('''INSERT INTO Tags (name) VALUES (%s) ''' ,(i))
+				conn.commit()
+			tagid = getTag_IdFromTag(i)
+			print(i)
+			photoid = getPhotoIdFromCaption(caption)
+			print(photoid)
+			cursor = conn.cursor()
+			cursor.execute('''INSERT INTO Tagged (photo_id,tag_id) VALUES (%s,%s) ''' ,(photoid,tagid))
+			conn.commit()
+		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(user_id), Albums = getUsersAlbums(user_id),base64=base64)
 	#The method is GET so we return a  HTML form to upload the a photo.
 	else:
+		user_id = getUserIdFromEmail(flask_login.current_user.id)
 		print(" Arriving at GET upload method")
-		return render_template('upload.html')
+		return render_template('upload.html', Albums = getUsersAlbums(user_id))
 #end photo uploading code
 
 #show all photos
@@ -269,6 +383,56 @@ def showallphotos():
 	
 	return render_template('showphotos.html', AllPhotos=photos, base64=base64)
 
+@app.route("/showmyphotos", methods=["GET"])
+@flask_login.login_required
+def showallmyphotos():
+	# for each user in db 
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+
+	photos = []
+	photos = photos + [getUsersPhotos(user_id)]
+	
+	return render_template('showmyphotos.html', photos = getUsersPhotos(user_id), base64=base64)
+
+@app.route("/searchtags", methods=["GET"])
+def searchtags():
+	tag_list = getAllTags()
+	tags = []
+	for tag_id in tag_list:
+		tags = tags + [getTagFromTag_Id(tag_id) ]
+	return render_template('searchtags.html', tags=tags )
+
+@app.route("/searchmytags", methods=["GET"])
+@flask_login.login_required
+def searchmytags():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	photos = [getUsersPhoto_Ids(user_id)]
+	tags = []
+	for photo in photos:
+		tags = tags + [getTag_IdFromPhoto_id(photo) ]
+	return render_template('searchmytags.html', tags=tags )
+
+@app.route("/searchtags", methods=["POST"])
+def selecttag():
+	tag_list = getAllTags()
+	tags = []
+	for tag_id in tag_list:
+		tags = tags + [getTagFromTag_Id(tag_id)]
+
+	return render_template('showalbum.html', tags=tags )
+
+@app.route("/show1tag/<tag_name>", methods=['GET', 'POST'])
+def show1tag(tag_name):
+	if request.method == "GET":
+		print("Tag: ", tag_name)
+		tagid = getTag_IdFromTag(tag_name)
+		photoidlist = getPhotosFromTags(tagid)
+		photos = []
+		for i in photoidlist:
+			photos = photos + [x for x in getPhotosFromPhoto_Id(i)]
+		return render_template ('show1tag.html', tag_name=tag_name, photos=photos, base64=base64)
+		
+
 @app.route("/showalbum", methods=["GET"])
 def showallalbums():
 	user_id_list = getAllUser_IDS()
@@ -276,6 +440,40 @@ def showallalbums():
 	for user_id in user_id_list:
 		albums = albums + [  x for x in getUsersAlbums(user_id)  ]
 	return render_template('showalbum.html', albums=albums )
+
+@app.route("/imgsearch", methods=["GET, POST"])
+def imgsearch():
+	if request.method == 'POST':
+		tag = request.form.get('search_here')
+			
+		return render_template('imgsearch.html')
+	#The method is GET so we return a HTML form to upload the a photo.
+	else:
+		user_id = getUserIdFromEmail(flask_login.current_user.id)
+		print(" Arriving at GET upload method")
+		return render_template('imgsearch.html', Albums = getUsersAlbums(user_id))
+
+@app.route("/showmyalbum", methods=["GET"])
+@flask_login.login_required
+def showallmyalbums():
+	# for each user in db 
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+
+	album = []
+	album = album + [x for x in getUsersAlbums(user_id)]
+	
+	return render_template('showmyalbum.html', albums = album)
+
+@app.route("/showmyalbum", methods=["POST"])
+@flask_login.login_required
+def selectmyalbums():
+	# for each user in db 
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+
+	album = []
+	album = album + [getUsersAlbums(user_id)]
+	
+	return render_template('showmyalbum.html', albums = album)
 
 @app.route("/showalbum", methods=["POST"])
 def selectalbum():
@@ -291,13 +489,50 @@ def show1album(album_name):
 	if request.method == "GET":
 		print("ablum name: ", album_name)
 		photo = getAlbumsPhotos(album_name)
-		return render_template ('show1album.html', album_name=album_name, photos=photo)
+		#print(photo)
+		return render_template ('show1album.html', album_name=album_name, photos=photo, base64=base64)
+
+
+@app.route("/friend", methods=['POST'])
+@flask_login.login_required
+def makefriend():
+	user_id1 = getUserIdFromEmail(flask_login.current_user.id)
+	user_emails = getAllUser_Emails()
+	friend_email = request.form.get('friend_email')
+	print(" this is friends email: ", friend_email)
+	user_id2 = getUserIdFromEmail (friend_email)
+	print(" this is friend's id: ", user_id2)
+	cursor = conn.cursor()
+	cursor.execute('''INSERT INTO Friends (user_id1, user_id2) VALUES (%s, %s )''', (user_id1, user_id2))
+	
+	conn.commit()
+	friends_ids = getUsersFriends(user_id1)
+
+	friends_emails = []
+	for friend_id in friends_ids:
+		friends_emails = friends_emails + [getUserEmailFromUser_Id(friend_id)]
+	
+
+	return render_template('friend.html', user_emails=user_emails, friends_emails=friends_emails)
+
+@app.route("/friend", methods=['GET'])
+@flask_login.login_required
+def ListFriends():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	friends_ids = getUsersFriends(user_id)
+	user_emails = getAllUser_Emails()
+	friends_emails = []
+	for friend_id in friends_ids:
+		friends_emails = friends_emails + [getUserEmailFromUser_Id(friend_id)]
+	
+	return render_template('friend.html', user_emails=user_emails, friends_emails=friends_emails)
+
 
 #default page
 @app.route("/", methods=['GET'])
 def hello():
 	return render_template('hello.html', message='Welecome to Photoshare')
-
+	
 
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run
