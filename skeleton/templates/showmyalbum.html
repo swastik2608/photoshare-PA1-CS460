@@ -11,8 +11,9 @@
             1. (with option to delete photo)
     3. Delete Album
 -->
-<a href='/'>Home</a><br><h2>Here are all albums</h2> <a href='/showalbum'>View all albums</a>
+<a href='/'>Home</a><br><h2>Here are all your albums</h2> <a href='/showalbum'>View all albums</a><br><a href='/album'>Create</a><br><br>
     <ul>
+    
     {% for album in albums %}
     <li><a href= "/show1album/{{ album }}" > {{ album }}  </a> <br>
     </li>
