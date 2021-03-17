@@ -185,6 +185,13 @@ def getOnePhotoInfo(photo_id):
 	cursor.execute("SELECT data, photo_id, caption FROM Photos WHERE photo_id = '{0}'".format(photo_id))
 	return cursor.fetchall()
 
+def getUseridfromphoto(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id FROM Photos WHERE photo_id = '{0}'".format(photo_id))
+	records = cursor.fetchall()
+	# all user ids in list form
+	records_list = [ x[0] for x in records]
+	return records_list
 
 def getAlbumsPhotos(album_name):
 	cursor = conn.cursor()
@@ -330,31 +337,43 @@ def show1album(album_name):
 		photo = getAlbumsPhotos(album_name)
 		return render_template ('show1album.html', album_name=album_name, photos=photo, base64=base64)
 
-
+@app.route('/errorsameuser')
+def sameuser():
+		return render_template('errorsameuser.html')	
 
 @app.route("/displayphoto/<photo_id>", methods=['GET', 'POST'])
 def displayphoto(photo_id):
+	photo_info = getOnePhotoInfo(photo_id)
 	if request.method == "GET":
 		comments = getCommentsOnPhotos(photo_id)
 
 	else:
 		commentText= request.form.get('comment')
+		print("this is the comment:", commentText)
 		if (flask_login.current_user.is_authenticated):
-			user_id = flask_login.current_user.id
+			user_email = flask_login.current_user.id
+			user_id = getUserIdFromEmail(user_email)
 		else:
 			user_id = None
+		
 		datetoday = date.today()
+		
+		# check if user id on photo matches user id for comment if so no execute else 
+		print(" this is user_id: ", user_id)
+		print(" this is user_id from getUserId Photo function : ", getUseridfromphoto(photo_id)[0])
+		if (user_id == getUseridfromphoto(photo_id)[0]):
+			return render_template('errorsameuser.html', message="You can not comment on your own photos", photo_info = photo_info, base64=base64)
 		cursor = conn.cursor()
 		cursor.execute('''INSERT INTO Comments ( user_id, photo_id, text, date) VALUES (%s, %s, %s, %s ) ''' ,(user_id, photo_id, commentText, datetoday))
 		conn.commit()
-		comments = getCommentsOnPhotos(photo_id) # nested list of [user_id, text]
-		for comment in comments:
-			if comment[0] == None:
-				comment[0] == "anonymous"
-			else:
-				comment[0] = getUserEmailFromUser_Id(comment[0])
+	comments = getCommentsOnPhotos(photo_id) # nested list of [user_id, text]
+	for comment in comments:
+		if comment[0] == None:
+			comment[0] = "anonymous"
+		else:
+			comment[0] = getUserEmailFromUser_Id(comment[0])
+			print("this is user email: ", comment[0])
 		
-	photo_info = getOnePhotoInfo(photo_id)
 	return render_template('displayphoto.html',  comments=comments , photo_info = photo_info, base64=base64)
 
 
