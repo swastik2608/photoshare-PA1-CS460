@@ -362,6 +362,7 @@ def displayphoto(photo_id):
 		comments = getCommentsOnPhotos(photo_id)
 
 	else:
+		datetoday = date.today()
 		commentText= request.form.get('comment')
 		print("this is the comment:", commentText)
 		if (flask_login.current_user.is_authenticated):
@@ -369,20 +370,15 @@ def displayphoto(photo_id):
 			user_id = getUserIdFromEmail(user_email)
 		else:
 			user_id = None
-		
-		datetoday = date.today()
-		LikeButton = request.form.get('Like')
-		if LikeButton:
-			insertLike(user_id, photo_id)
-		
+		#if request.form['submit_button'] == 'Like':
+		#	insertLike(user_id, photo_id)
 		# check if user id on photo matches user id for comment if so no execute else 
-		print(" this is user_id: ", user_id)
-		print(" this is user_id from getUserId Photo function : ", getUseridfromphoto(photo_id)[0])
 		if (user_id == getUseridfromphoto(photo_id)[0]):
 			return render_template('errorsameuser.html', message="You can not comment on your own photos", photo_info = photo_info, base64=base64)
 		cursor = conn.cursor()
 		cursor.execute('''INSERT INTO Comments ( user_id, photo_id, text, date) VALUES (%s, %s, %s, %s ) ''' ,(user_id, photo_id, commentText, datetoday))
 		conn.commit()
+		print("NOW STORING THE COMMENT")
 	comments = getCommentsOnPhotos(photo_id) # nested list of [user_id, text]
 	for comment in comments:
 		if comment[0] == None:
@@ -390,10 +386,8 @@ def displayphoto(photo_id):
 		else:
 			comment[0] = getUserEmailFromUser_Id(comment[0])
 			print("this is user email: ", comment[0])
-	
-
-
-	return render_template('displayphoto.html', num_likes= getLikesCountFor1Photo(photo_id), comments=comments , photo_info = photo_info, base64=base64)
+	print("this is photo info: ", photo_info)
+	return render_template('displayphoto.html', num_likes= getLikesCountFor1Photo(photo_id)[0], comments=comments , photo_info = photo_info, base64=base64)
 
 def getMatchingComment(comment_text):
 	print(" this is comment_text in getMatchingCOmment ", comment_text)

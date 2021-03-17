@@ -14,20 +14,45 @@
         <h1>{{ message }} </h1>
 
 {% endif %}
-    <body>
-        
+
+
+   
+        {%for photos_info in photo_info %}
         <div class="title">
             <h1>Add A Comment</h1>
         </div>
-        {%for photos_info in photo_info %}
+        
 
         <div id="content">
             <form method="post" action="/displayphoto/{{ photos_info [1]}}">
                 <label for="comment">Type Comment Here:</label>
                 <input type="text" name="comment" /><br />
-                <input type="submit" value="Create" />
+                <input type="submit" name="submit_button" value="Create" />
             </form>
         </div>
+
+
+
+        <h2>This is the Photo: </h2>  
+       <h3>Caption: {{photos_info[2]}}</h3>
+        <img src='data:image/jpg;base64, {{ base64.b64encode(photos_info[0]).decode("ascii") }}'/>
+        
+        
+        {% endfor %}
+    
+        <!-- ADD LIKE FUNCTIONALITY 
+
+        <div class="title">
+            <h1>Add A Like</h1>
+        </div>
+       
+
+        <div id="content">
+            <form method="post" action="/displayphoto/{{ photos_info [1]}}"> 
+            <input type="submit" name = "submit_button" value="Like" />
+            </form>
+        </div> -->
+
                
 <h2>Here are current comments</h2>
     <ul>
@@ -36,46 +61,15 @@
         <li>Comment:  {{ comment[1] }} <br>
             <body> From User: {{ comment[0] }}</body>
         </li>
-    {% endfor %}
+   
     </ul>
-    
-       <h2>This is the Photo: </h2>  
-       <h3>Caption: {{photos_info[2]}}</h3>
-        <img src='data:image/jpg;base64, {{ base64.b64encode(photos_info[0]).decode("ascii") }}'/>
-
-        <!-- ADD LIKE FUNCTIONALITY -->
-
-        <div class="title">
-            <h1>Add A Like</h1>
-        </div>
-        {%for photos_info in photo_info %}
-
-        <div id="content">
-            <form method="post" action="/displayphoto/{{ photos_info [1]}}">
-            <input type="submit" value="Like" />
-            </form>
-        </div>
-               
-{% endfor %}
-
-
-
-
-
-
-
-        
-          <a href="{{ url_for('like_action', photo_id=photo.id, action='like') }}">Like</a>
-    
-        {{ pic.likes.count() }} likes
-      {% endfor %}
-
-
+    {% endfor %}
 
 <h4> The Number of likes is: {{ num_likes }}</h4>
 
 
 
-    </body>
+ 
 
     <a href='/'>Home</a>
+    
