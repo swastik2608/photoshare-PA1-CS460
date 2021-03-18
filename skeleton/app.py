@@ -12,6 +12,7 @@
 import flask
 from flask import Flask, Response, request, render_template, redirect, url_for
 from flaskext.mysql import MySQL
+from collections import Counter
 import flask_login
 from datetime import date
 #for image uploading
@@ -236,6 +237,38 @@ def friendRecommendation(current_id):
 		mutual_friends += mutualFriend(current_id, friend)
 	return mutual_friends
 
+def countUserComments(user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT COUNT(comment_id) FROM Comments WHERE user_id = '{0}'".format(user_id))
+	count = cursor.fetchall()
+	count_total = [x[0] for x in count]
+	return count_total
+
+def countUserPhotos(user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT COUNT(photo_id) FROM Photos WHERE user_id = '{0}'".format(user_id))
+	count = cursor.fetchall()
+	count_total = [x[0] for x in count]
+	return count_total
+
+def totalUserActivity(user_id):
+	print("FROM TOTALUSER ACTIVITY", countUserComments(user_id) + countUserPhotos(user_id))
+	return sum(countUserComments(user_id) + countUserPhotos(user_id))
+	
+def top10Contributors():
+	user_ids = getAllUser_IDS()
+	user_contributions = []
+	for user in user_ids:
+		user_contributions += [(totalUserActivity(user), user)]
+	print(user_contributions)
+	user_contributions.sort()
+	user_contributions.reverse()
+	top10 = []
+	for i in user_contributions:
+		top10.append(getUserEmailFromUser_Id(i[1]))
+	top10_emails = [x[0] for x in top10]
+	return top10_emails
+
 def getUserEmailFromUser_Id(user_id):
 	cursor = conn.cursor()
 	cursor.execute("SELECT email FROM Users WHERE user_id = '{0}'".format(user_id))
@@ -276,11 +309,17 @@ def getNumberofPhotosFromTags(tag_id):
 
 def getPhotosFromTaglist(tag_idlist):
 	photos = []
+	length = len(tag_idlist)
 	for tag in tag_idlist:
 		photos = photos + [x for x in getPhotosFromTags(tag)]
-	res = [] 
-	[res.append(x) for x in photos if x not in res]
-	return res
+
+	final = []
+
+	Dictionary = Counter(photos)
+	for key, value in Dictionary.items():
+		if value == length:
+			final.append(key)
+	return final
 
 def getTag_IdFromPhoto_id(photo_id):
 	cursor = conn.cursor()
@@ -770,7 +809,7 @@ def getMatchingComment(comment_text):
 	records = cursor.fetchall()
 	print(" this is records: ", records)
 	# all user ids in list form
-	records_list = [ [x[0], x[1]] for x in records]
+	records_list = [ [getUserEmailFromUser_Id(x[0])[0], x[1]] for x in records]
 	return records_list
 
 @app.route ("/searchcomments", methods=['GET', 'POST'])
@@ -814,8 +853,16 @@ def ListFriends():
 	for friend_id in friends_ids:
 		friends_emails = friends_emails + [getUserEmailFromUser_Id(friend_id)]
 	
-	return render_template('friend.html', user_emails=user_emails, friends_emails=friends_emails)
+	friend_recommend = friendRecommendation(user_id)
+	recommendation = []
+	for friend in friend_recommend:
+		reccomendation += [getUserEmailFromUser_Id(friend)]
+	
+	return render_template('friend.html', recommendation= recommendation, user_emails=user_emails, friends_emails=friends_emails)
 
+@app.route("/top10users", methods=['GET'])
+def top10users():
+	return render_template('top10users.html', top_users=top10Contributors())
 
 #default page
 @app.route("/", methods=['GET'])
