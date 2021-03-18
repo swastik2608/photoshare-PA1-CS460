@@ -6,7 +6,7 @@
     3. search all users (search box)
     4. show recommended friends (find based on mutual friends)
 -->
-
+<a href='/'>Home</a>
 <!doctype html>
 
 <title>Friends Page</title>
@@ -29,7 +29,7 @@
             <form method="post" action="/friend">
                 <label for="friend_email">Please Write New Friend's Email:</label>
                 <input type="text" name="friend_email" required='true' /><br />
-                <input type="submit" value="Add" />
+                <input type="submit" value="Create" />
             </form>
         </div>
     
@@ -49,6 +49,16 @@
 
 </body>
 
+{% if reccomendation %}
+<h2>These are reccomendend friends: </h2>
+<ul>
+    {% for person in reccomendation %}
+
+        <li>{{ person }} 
+        </li>
+    {% endfor %}
+    </ul>
+{% endif %}
 
 
 <ul>

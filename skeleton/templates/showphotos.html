@@ -29,6 +29,7 @@ Everything between two brackets is a list. Lists are useful for storing sequenti
     {% for photo in user %}
 
         <li>{{photo[2]}}<br>
+        <a href= "/displayphoto/{{ photo[1] }}" > {{ photo[1] }}  </a>
         <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/></li>
         <button type="button" onclick="alert('Liked')">Like</button>
         

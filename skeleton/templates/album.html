@@ -4,7 +4,7 @@
     3. date created
     4. add photos
 -->
-
+<a href='/'>Home</a>
 <head>
     <title>Create an Album!</title>
 </head>
@@ -33,5 +33,16 @@
             </form>
         </div>
     </body>
+
+
+<div id="content">
+    <h3>Delete an Album </h3>
+    <form method="post" action="/album">
+        <label for="album_delete">Please Write Name of Album to be Deleted:</label>
+        <input type="text" name="album_delete" /><br />
+        <input type="submit" value="Delete" />
+    </form>
+</div>
+
 
     <a href='/'>Home</a>

@@ -17,8 +17,16 @@
             </ul>
 
 
-    {% endfor %}
-    </ul>
+      
+   
+    <div id="content">
+        <h3>Photo to be Deleted </h3>
+        <form method="post" action="/show1album/{{ album_name }}">
+            <label for="photo_delete">Please Write the Photo ID to be deleted (it is the hyperlink):</label>
+            <input type="text" name="photo_delete" /><br />
+            <input type="submit" value="Delete" />
+        </form>
+    </div>
     
 
-    </ul>
+    {% endfor %}
