@@ -6,9 +6,28 @@
     {% for photo in photos %}
 
         <li>{{photo[2]}}<br>
+        <a href= "/displayphoto/{{ photo[1] }}" > {{ photo[1] }}  </a>
         <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/></li>
-    {% endfor %}
-    </ul>
+
+        <ul>
+            {% for album in albums %}
+            <li><a href= "/show1album/{{ album }}" > {{ album }}  </a> <br>
+            </li>
+            {% endfor %}
+            </ul>
+
+
+      
+   
+    <div id="content">
+        <h3>Photo to be Deleted </h3>
+        <form method="post" action="/show1album/{{ album_name }}">
+            <label for="photo_delete">Please Write the Photo ID to be deleted (it is the hyperlink):</label>
+            <input type="text" name="photo_delete" /><br />
+            <input type="submit" value="Delete" />
+        </form>
+    </div>
     
 
-    </ul>
+    {% endfor %}
+    

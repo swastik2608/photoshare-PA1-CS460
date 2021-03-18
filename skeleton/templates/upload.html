@@ -1,4 +1,5 @@
 <!-- author ben lawson (balawson@bu.edu) -->
+<a href='/'>Home</a>
 <head>
     <title>Upload a photo!</title>
 </head>
@@ -15,7 +16,7 @@
                     <ul>
                     {% for album in Albums %}
                 
-                        <li>{{album[1]}}<br> </li>
+                        <li>{{ album }}<br> </li>
                     {% endfor %}
                     </ul>
                     <label for="album_name">Select Album: </label>

@@ -7,3 +7,62 @@
     4. show recommended friends (find based on mutual friends)
 
 -->
+<a href='/'>Home</a>
+<!doctype html>
+
+<title>Friends Page</title>
+<body>
+
+ <h1>Here are all users on photoshare: </h1>
+ <ul>
+    {% for user in user_emails %}
+
+        <li>{{ user }} 
+        </li>
+    {% endfor %}
+    </ul>
+
+    
+        <div class="title">
+            <h1>Add a Friend for Photoshare</h1>
+        </div>
+        <div id="content">
+            <form method="post" action="/friend">
+                <label for="friend_email">Please Write New Friend's Email:</label>
+                <input type="text" name="friend_email" required='true' /><br />
+                <input type="submit" value="Create" />
+            </form>
+        </div>
+    
+
+
+<h1>These are your friends on photoshare: </h1>
+<ul>
+    {% for friend in friends_emails %}
+
+        <li>{{ friend }} 
+        </li>
+    {% endfor %}
+    </ul>
+
+
+
+
+</body>
+
+{% if reccomendation %}
+<h2>These are reccomendend friends: </h2>
+<ul>
+    {% for person in reccomendation %}
+
+        <li>{{ person }} 
+        </li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+
+<ul>
+<li><a href='/logout'>Logout</a></li>
+<li><a href='/'>Home</a></li>
+</ul>
