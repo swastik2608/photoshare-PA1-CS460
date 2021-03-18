@@ -59,7 +59,7 @@ CREATE TABLE Photos(
  album_name VARCHAR(100),
 user_id INTEGER NOT NULL,
  PRIMARY KEY (photo_id),
- FOREIGN KEY (albums_id) REFERENCES Albums (albums_id),
+ FOREIGN KEY (albums_id) REFERENCES Albums (albums_id) ON DELETE CASCADE,
 FOREIGN KEY (user_id) REFERENCES Users (user_id)
 );
 
