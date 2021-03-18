@@ -25,6 +25,15 @@
 {% else %}
   <p> Go to <a href='/profile'>profile?</a></p>
 {% endif %}
+
+<h3>These are the top contributors: </h3>
+<ul>
+  {% for user in range(10) %}
+
+      <li>{{ top_users[user] }}<br>
+      </li>
+  {% endfor %}
+  </ul>
 <!--
   HOMEPAGE:
 	display top 10 users (count the number of 

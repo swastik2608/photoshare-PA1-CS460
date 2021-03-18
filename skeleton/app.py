@@ -23,7 +23,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'PASSWORD'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'PASSWORDS'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -294,6 +294,49 @@ def friendReccomendation(current_id):
 		mutual_friends += mutualFriend(current_id, friend)
 	return mutual_friends
 
+
+def countUserComments(user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT COUNT(comment_id) FROM Comments WHERE user_id = '{0}'".format(user_id))
+	count = cursor.fetchall()
+	count_total = [x[0] for x in count]
+	return count_total
+
+
+def countUserPhotos(user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT COUNT(photo_id) FROM Photos WHERE user_id = '{0}'".format(user_id))
+	count = cursor.fetchall()
+	count_total = [x[0] for x in count]
+	return count_total
+
+def totalUserActivity(user_id):
+	print("FROM TOTALUSER ACTIVITY", countUserComments(user_id) + countUserPhotos(user_id))
+	return sum(countUserComments(user_id) + countUserPhotos(user_id))
+
+def top10Contributors():
+	user_ids = getAllUser_IDS()
+	user_contributions = []
+	for user in user_ids:
+		user_contributions += [(totalUserActivity(user), user)]
+	print(user_contributions)
+	user_contributions.sort()
+	user_contributions.reverse()
+	top10 = []
+	for i in user_contributions:
+		top10.append(getUserEmailFromUser_Id(i[1]))
+	top10_emails = [x[0] for x in top10]
+
+
+	#print(user_contributions)
+	#top10ids = [user_contributions[x][0] for x in range(len(user_contributions))] # NEED TO CHANGE TO 10
+	#print(top10ids)
+	#top10 = top10ids[:3] # NEED TO CHANGE TO 10
+
+	#top10ids = [top10[x][0] for x in range(3)] # NEED TO CHANGE TO 10
+	#top10_emails = [getUserEmailFromUser_Id(y) for y in top10]
+	return top10_emails
+
 @app.route('/profile')
 @flask_login.login_required
 def protected():
@@ -523,7 +566,7 @@ def ListFriends():
 #default page
 @app.route("/", methods=['GET'])
 def hello():
-	return render_template('hello.html', message='Welecome to Photoshare')
+	return render_template('hello.html', top_users=top10Contributors(), message='Welecome to Photoshare')
 	
 
 if __name__ == "__main__":
