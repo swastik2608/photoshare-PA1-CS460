@@ -186,9 +186,7 @@ def getUsersPhoto_Ids(user_id):
 	cursor = conn.cursor()
 	cursor.execute("SELECT photo_id FROM Photos WHERE user_id = '{0}'".format( user_id))
 	records = cursor.fetchall()
-	print(records)
 	records_list = [x[0] for x in records]
-	print(records_list)
 	return records_list
 
 def getCommentsOnPhotos(photo_id):
@@ -214,14 +212,29 @@ def getUsersAlbums(user_id):
 	cursor.execute("Select album_name FROM Albums WHERE user_id = '{0}'".format(user_id))
 	records = cursor.fetchall()
 	records_list = [x[0] for x in records]
+	records_list = [x for x in records_list if x != None ]
 	return records_list
 
-def getUsersFriends(user_id):
+def getUserFriends(user_id1):
 	cursor = conn.cursor()
-	cursor.execute("SELECT user_id2 FROM Friends WHERE user_id1= '{0}'".format(user_id))
-	records = cursor.fetchall()
-	records_list = [x[0] for x in records]
-	return records_list
+	cursor.execute("SELECT user_id2 FROM Friends WHERE user_id1 = '{0}'".format(user_id1))
+	friend = cursor.fetchall()
+	friend_list = [x[0] for x in friend]
+	return friend_list
+
+def mutualFriend(current_id, friend_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id2 FROM Friends WHERE user_id1 != '{0}' AND user_id1 = '{1}' ".format(current_id, friend_id))
+	mutual = cursor.fetchall()
+	mutual_list = [x[0] for x in mutual]
+	return mutual_list
+
+def friendRecommendation(current_id):
+	friend_list = getUserFriends(current_id)
+	mutual_friends = []
+	for friend in friend_list:
+		mutual_friends += mutualFriend(current_id, friend)
+	return mutual_friends
 
 def getUserEmailFromUser_Id(user_id):
 	cursor = conn.cursor()
@@ -251,7 +264,6 @@ def getPhotosFromTags(tag_id):
 	cursor = conn.cursor()
 	cursor.execute("SELECT photo_id FROM Tagged WHERE tag_id = '{0}'".format(tag_id))
 	records = cursor.fetchall()
-	print(records)
 	records_list = [x[0] for x in records]
 	return records_list
 
@@ -267,9 +279,7 @@ def getPhotosFromTaglist(tag_idlist):
 	for tag in tag_idlist:
 		photos = photos + [x for x in getPhotosFromTags(tag)]
 	res = [] 
-	print(photos)
 	[res.append(x) for x in photos if x not in res]
-	print(res)
 	return res
 
 def getTag_IdFromPhoto_id(photo_id):
@@ -318,6 +328,18 @@ def isEmailUnique(email):
 	else:
 		return True
 #end login code
+
+def deleteAlbum(album_name):
+	cursor = conn.cursor()
+	cursor.execute("DELETE FROM Albums WHERE album_name = '{0}'".format(album_name))
+	print(" Deleted Successfully ")
+	return
+
+def deletePhoto(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("DELETE FROM Photos WHERE photo_id = '{0}'".format(photo_id))
+	print(" Deleted Successfully ")
+	return
 
 def insertLike(user_id, photo_id):
 	cursor = conn.cursor()
@@ -381,9 +403,7 @@ def upload_file():
 				cursor.execute('''INSERT INTO Tags (name) VALUES (%s) ''' ,(i))
 				conn.commit()
 			tagid = getTag_IdFromTag(i)
-			print(i)
 			photoid = getPhotoIdFromCaption(caption)
-			print(photoid)
 			cursor = conn.cursor()
 			cursor.execute('''INSERT INTO Tagged (photo_id,tag_id) VALUES (%s,%s) ''' ,(photoid,tagid))
 			conn.commit()
@@ -417,6 +437,8 @@ def album():
 		albums=getUsersAlbums(user_id)
 		for album in albums:
 			print(album)
+		album_delete = request.form.get('album_delete')
+		deleteAlbum(album_delete)
 		return render_template('album.html', name=flask_login.current_user.id, albums=getUsersAlbums(user_id),base64=base64)
 	#The method is GET so we return a  HTML form to create an album
 	else:
@@ -456,17 +478,6 @@ def searchtags():
 		tags = tags + [getTagFromTag_Id(tag_id) ]
 	return render_template('searchtags.html', tags=tags )
 
-@app.route("/searchmytags", methods=["GET"])
-@flask_login.login_required
-def searchmytags():
-	user_id = getUserIdFromEmail(flask_login.current_user.id)
-	photos = getUsersPhoto_Ids(user_id)
-	tags = []
-	for photo in photos:
-		tags = tags + [getTag_IdFromPhoto_id(photo) ]
-	print(tags[0])
-	return render_template('searchmytags.html', tags=tags[0] )
-
 @app.route("/searchtags", methods=["POST"])
 def selecttag():
 	tag_list = getAllTags()
@@ -476,16 +487,113 @@ def selecttag():
 
 	return render_template('showalbum.html', tags=tags )
 
+@app.route("/rec", methods=["GET"])
+@flask_login.login_required
+def rec():
+	user_id_list = getAllUser_IDS()
+
+	photos = []
+	for user_id in user_id_list:
+		photos = photos + [x for x in getUsersPhoto_Ids(user_id)]
+	
+	print(photos)
+
+	user = getUserIdFromEmail(flask_login.current_user.id)
+
+	mypics = getUsersPhoto_Ids(user)
+
+	print(mypics)
+
+	c = [x for x in photos if x not in mypics]
+
+	print(c)
+
+	tags = []
+	for photo in mypics:
+		tags = tags + [getTag_IdFromPhoto_id(photo) ]
+
+	tagids = tags[0]
+
+	print(tags[0])
+
+	photoids = getPhotosFromTaglist(tagids)
+
+	print(photoids)
+
+	photoidsfinal = [x for x in photoids if x not in mypics]
+
+	print(photoidsfinal)
+
+	photosfinal = []
+
+	for i in photoidsfinal:
+		photosfinal = photosfinal + [x for x in getPhotosFromPhoto_Id(i)]
+
+	return render_template ('rec.html',photos=photosfinal, base64=base64)
+
+@app.route("/rec", methods=["POST"])
+@flask_login.login_required
+def recom():
+	user_id_list = getAllUser_IDS()
+
+	photos = []
+	for user_id in user_id_list:
+		photos = photos + [x for x in getUsersPhoto_Ids(user_id)]
+	
+	print(photos)
+
+	user = getUserIdFromEmail(flask_login.current_user.id)
+
+	mypics = getUsersPhoto_Ids(user)
+
+	print(mypics)
+
+	c = [x for x in photos if x not in mypics]
+
+	print(c)
+
+	tags = []
+	for photo in mypics:
+		tags = tags + [getTag_IdFromPhoto_id(photo) ]
+
+	tagids = tags[0]
+
+	print(tags[0])
+
+	photoids = getPhotosFromTaglist(tagids)
+
+	print(photoids)
+
+	photoidsfinal = [x for x in photoids if x not in mypics]
+
+	print(photoidsfinal)
+
+	photosfinal = []
+
+	for i in photoidsfinal:
+		photosfinal = photosfinal + [x for x in getPhotosFromPhoto_Id(i)]
+
+	return render_template ('rec.html',photos=photosfinal, base64=base64)
+
+@app.route("/searchmytags", methods=["GET"])
+@flask_login.login_required
+def searchmytags():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	photos = getUsersPhoto_Ids(user_id)
+	tags = []
+	for photo in photos:
+		tags = tags + [getTag_IdFromPhoto_id(photo) ]
+	return render_template('searchmytags.html', tags=tags[0] )
+
+
 @app.route("/searchmytags", methods=["POST"])
 @flask_login.login_required
 def selectmytags():
 	user_id = getUserIdFromEmail(flask_login.current_user.id)
 	photos = getUsersPhoto_Ids(user_id)
-	print(photos)
 	tags = []
 	for photo in photos:
 		tags = tags + [getTag_IdFromPhoto_id(photo) ]
-	print(tags)
 	return render_template('searchmytags.html', tags=tags )
 
 @app.route("/show1tag/<tag_name>", methods=['GET', 'POST'])
@@ -563,6 +671,27 @@ def show1album(album_name):
 		#print(photo)
 		return render_template ('show1album.html', album_name=album_name, photos=photo, base64=base64)
 
+def isOwner(photo_id, user_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id FROM Photos WHERE photo_id = '{0}' AND user_id = '{1}'".format(photo_id, user_id))
+	user_list = cursor.fetchall()
+	user_list_1 = [x[0] for x in user_list]
+	if (len(user_list_1) > 0):
+		return (user_list_1[0] == user_id)
+	return False
+
+@app.route("/show1album/<album_name>", methods=["POST"])
+@flask_login.login_required
+def deletePhotoFunction(album_name):
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	photo_delete = request.form.get('photo_delete')
+	if (isOwner(photo_delete, user_id)):
+		deletePhoto(photo_delete)
+	else:
+		return render_template('error_not_yours.html')
+	photo = getAlbumsPhotos(album_name)
+	return render_template ('show1album.html',  album_name=album_name, photos=photo, base64=base64)
+
 def merge(list1, list2): 
       
     merged_list = tuple(zip(list1, list2))  
@@ -588,8 +717,6 @@ def gettop10():
    		tags1.append(getTagFromTag_Id(i[1]))
 
 	tags1.reverse()
-		
-	print(tags)
 	
 	return render_template('top10.html', tags = tags1)
 
@@ -660,30 +787,28 @@ def searchcomments():
 @app.route("/friend", methods=['POST'])
 @flask_login.login_required
 def makefriend():
-	user_id1 = getUserIdFromEmail(flask_login.current_user.id)
-	user_emails = getAllUser_Emails()
-	friend_email = request.form.get('friend_email')
-	print(" this is friends email: ", friend_email)
-	user_id2 = getUserIdFromEmail (friend_email)
-	print(" this is friend's id: ", user_id2)
-	cursor = conn.cursor()
-	cursor.execute('''INSERT INTO Friends (user_id1, user_id2) VALUES (%s, %s )''', (user_id1, user_id2))
-	
-	conn.commit()
-	friends_ids = getUsersFriends(user_id1)
-
-	friends_emails = []
-	for friend_id in friends_ids:
-		friends_emails = friends_emails + [getUserEmailFromUser_Id(friend_id)]
-	
-
+	user_id1 = getUserIdFromEmail(flask_login.current_user.id)	
+	user_emails = getAllUser_Emails()	
+	friend_email = request.form.get('friend_email')	
+	print(" this is friends email: ", friend_email)	
+	user_id2 = getUserIdFromEmail (friend_email)	
+	print(" this is friend's id: ", user_id2)	
+	cursor = conn.cursor()	
+	cursor.execute('''INSERT INTO Friends (user_id1, user_id2) VALUES (%s, %s )''', (user_id1, user_id2))	
+		
+	conn.commit()	
+	friends_ids = getUserFriends(user_id1)	
+	friends_emails = []	
+	for friend_id in friends_ids:	
+		friends_emails = friends_emails + [getUserEmailFromUser_Id(friend_id)]	
+		
 	return render_template('friend.html', user_emails=user_emails, friends_emails=friends_emails)
 
 @app.route("/friend", methods=['GET'])
 @flask_login.login_required
 def ListFriends():
 	user_id = getUserIdFromEmail(flask_login.current_user.id)
-	friends_ids = getUsersFriends(user_id)
+	friends_ids = getUserFriends(user_id)
 	user_emails = getAllUser_Emails()
 	friends_emails = []
 	for friend_id in friends_ids:
